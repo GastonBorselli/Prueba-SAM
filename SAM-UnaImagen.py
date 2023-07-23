@@ -6,6 +6,7 @@ from IPython.display import display, Image
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 ultralytics.checks()
 # DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 # MODEL_TYPE = "vit_h"
@@ -37,8 +38,9 @@ def show_box(box, ax):
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))
 
 
-model=YOLO('yolov8n.pt')
-resultado = model.predict(source="fotosExtraidas/0.png",conf=0.25)
+startTime = time.time()
+model=YOLO('modelosEntrenados/yolov8n.pt')
+resultado = model.predict(source="fotosExtraidas/147.png",conf=0.25)
 
 
 for resultados in resultado:
@@ -46,17 +48,15 @@ for resultados in resultado:
 bbox = boxes.xyxy.tolist()[0]
 print(bbox)
 
-sam_checkpoint = "sam_vit_h_4b8939.pth"
+sam_checkpoint = "modelosEntrenados/sam_vit_h_4b8939.pth"
 model_type = "vit_h"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 
 predictor = SamPredictor(sam)
 
-image = cv2.cvtColor(cv2.imread('fotosExtraidas/0.png'), cv2.COLOR_BGR2RGB)
+image = cv2.cvtColor(cv2.imread('fotosExtraidas/147.png'), cv2.COLOR_BGR2RGB)
 predictor.set_image(image)
 
-    
-    
 input_box = np.array(bbox)
 masks, _, _ = predictor.predict(
     point_coords=None,
@@ -64,14 +64,6 @@ masks, _, _ = predictor.predict(
     box=input_box[None, :],
     multimask_output=False,
 )
-
-plt.figure(figsize=(10, 10))
-plt.imshow(image)
-show_mask(masks[0], plt.gca())
-show_box(input_box, plt.gca())
-plt.axis('off')
-plt.show()
-
 
 segmentation_mask = masks[0]
 
@@ -82,7 +74,5 @@ white_background = np.ones_like(image) * 255
 # Apply the binary mask
 new_image = white_background * (1 - binary_mask[..., np.newaxis]) + image * binary_mask[..., np.newaxis]
 
-plt.imshow(new_image.astype(np.uint8))
-plt.axis('off')
-plt.show()
-# new_image.astype(np.uint8).save('sinFondoSAM') NO GUARDA IMAGEN EN CARPETA
+cv2.imwrite('fotosSinFondo/sinFondoSAM147.png', cv2.cvtColor(new_image.astype(np.uint8), cv2.COLOR_BGR2RGB))
+print("Tiempo total: ", time.time() - startTime)

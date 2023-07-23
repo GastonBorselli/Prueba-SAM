@@ -1,4 +1,3 @@
-from rembg import remove
 from PIL import Image
 import os
 import torch
@@ -43,7 +42,7 @@ for resultados in resultado:
 bbox = boxes.xyxy.tolist()[0]
 # print(bbox)
 
-sam_checkpoint = "sam_vit_h_4b8939.pth"
+sam_checkpoint = "modelosEntrenados/sam_vit_h_4b8939.pth"
 model_type = "vit_h"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 
