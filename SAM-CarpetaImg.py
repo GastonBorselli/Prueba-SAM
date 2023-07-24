@@ -8,12 +8,15 @@ from IPython.display import display, Image
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 ultralytics.checks()
 
 
+startTime = time.time()
 #definir las carpetas de entrada y salida
 input_folder = "fotosExtraidas"
-output_folder = "sinFondoSAM"
+#Crea antes la carpeta vit_h de forma manual para que funcione
+output_folder = "fotosSinFondo/vit_h"
 
 #----------------BORRAR CON REMBG-----------------
 # loop a traves de todos los archivos en la carpeta de entrada
@@ -47,7 +50,6 @@ model_type = "vit_h"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 
 predictor = SamPredictor(sam)
-
 
 def show_mask(mask, ax, random_color=False):
     if random_color:
@@ -86,22 +88,13 @@ for filename in os.listdir(input_folder):
             multimask_output=False,
         )
         
-        plt.figure(figsize=(10, 10))
-        plt.imshow(image)
-        show_mask(masks[0], plt.gca())
-        show_box(input_box, plt.gca())
-        plt.axis('off')
-        plt.show()
-        
         segmentation_mask = masks[0]
-
-# Convert the segmentation mask to a binary mask
+        # Convert the segmentation mask to a binary mask
         binary_mask = np.where(segmentation_mask > 0.5, 1, 0)
         white_background = np.ones_like(image) * 255
-
         # Apply the binary mask
         new_image = white_background * (1 - binary_mask[..., np.newaxis]) + image * binary_mask[..., np.newaxis]
-        plt.imshow(new_image.astype(np.uint8))
-        plt.axis('off')
-        plt.show()
 
+        cv2.imwrite(output_path, cv2.cvtColor(new_image.astype(np.uint8), cv2.COLOR_BGR2RGB))
+
+print("Tiempo total: ", time.time() - startTime)
